@@ -38,7 +38,7 @@ export interface ReciboConsulta {
 }
 
 export interface TipoTarifaLectura {
-  Id_Tipo_Tarifa_Lectura: number;
+  Id_Tarifa_Lectura: number;
   Nombre_Tipo_Tarifa: string;
 }
 
