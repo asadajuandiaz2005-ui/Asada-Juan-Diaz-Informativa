@@ -1,7 +1,6 @@
 import { useAlerts } from "../../../context/AlertContext";
 import { useForm } from "@tanstack/react-form";
-import { useEffect, useRef, useState } from "react";
-import data from "../../../data/Data.json";
+import { useEffect, useState } from "react";
 import { DesconexionJuridicaSchema, MotivoDesconexionValues } from "../../../Schemas/Solicitudes/Juridica/DesconexionMedidorJuridica";
 import type { MotivoDesconexion } from "../../../Schemas/Solicitudes/Juridica/DesconexionMedidorJuridica";
 import { useDesconexionJuridica, useMedidoresJuridica } from "../../../Hook/Solicitudes/HookJuridicas";
@@ -23,52 +22,41 @@ function formatCedulaJuridica(value: string) {
 }
 
 const DesconexionMedidorJuridica = ({ onClose }: Props) => {
-    const [archivoSeleccionado, setArchivoSeleccionado] = useState<{ [key: string]: File | null }>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [isSending, setIsSending] = useState(false);
     const mutation = useDesconexionJuridica();
     const { showError } = useAlerts();
-    const planosInputRef = useRef<HTMLInputElement>(null);
-    const escrituraInputRef = useRef<HTMLInputElement>(null);
 
     const [mostrarFormulario, setMostrarFormulario] = useState(true);
     const [cedulaJuridica, setCedulaJuridica] = useState('');
     const { medidores, isLoading: isMedidoresLoading } = useMedidoresJuridica(cedulaJuridica);
 
-    // Validación en tiempo real SOLO del campo editado
-    const handleFieldChange = (fieldName: string, value: any) => {
-        // Validación personalizada por campo
-        switch (fieldName) {
-            case 'Cedula_Juridica':
-                if (!/^3-\d{3}-\d{6}$|^\d{10}$/.test(value)) {
-                    setFieldErrors(prev => ({ ...prev, [fieldName]: 'La cédula jurídica debe tener el formato 3-XXX-XXXXXX o 10 dígitos' }));
-                } else {
-                    setFieldErrors(prev => { const newErrors = { ...prev }; delete newErrors[fieldName]; return newErrors; });
-                }
-                break;
-            case 'Motivo_Desconexion':
-                if (!value) {
-                    setFieldErrors(prev => ({ ...prev, [fieldName]: 'Debe seleccionar una causa de desconexión válida' }));
-                } else {
-                    setFieldErrors(prev => { const newErrors = { ...prev }; delete newErrors[fieldName]; return newErrors; });
-                }
-                break;
-            case 'Motivo_Otro':
-                if (value && value.length > 250) {
-                    setFieldErrors(prev => ({ ...prev, [fieldName]: 'La causa adicional no puede tener más de 250 caracteres' }));
-                } else {
-                    setFieldErrors(prev => { const newErrors = { ...prev }; delete newErrors[fieldName]; return newErrors; });
-                }
-                break;
-        }
+    const validateField = (fieldName: string, value: any, allValues?: any) => {
+        const valuesToValidate = {
+            ...allValues,
+            [fieldName]: value,
+        };
+
+        const validation = DesconexionJuridicaSchema.safeParse(valuesToValidate);
+        const fieldIssue = validation.success
+            ? undefined
+            : validation.error.errors.find((err) => err.path[0] === fieldName);
+
+        setFieldErrors(prev => {
+            const next = { ...prev };
+            if (fieldIssue) next[fieldName] = fieldIssue.message;
+            else delete next[fieldName];
+            return next;
+        });
     };
 
     const saveToSessionStorage = (values: any) => {
         try {
-            // Guardamos solo la cédula jurídica
             const dataToSave = {
                 Cedula_Juridica: values.Cedula_Juridica,
+                Id_Medidor: values.Id_Medidor,
+                Motivo_Desconexion: values.Motivo_Desconexion,
             };
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
         } catch (error) {
@@ -80,10 +68,7 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
         defaultValues: {
             Cedula_Juridica: '',
             Motivo_Desconexion: '' as MotivoDesconexion,
-            Motivo_Otro: '',
-            Id_Medidor: 0,
-            Planos_Terreno: undefined as File | undefined,
-            Certificacion_Literal: undefined as File | undefined,
+            Id_Medidor: undefined as number | undefined,
         },
 
         onSubmit: async ({ value }) => {
@@ -110,11 +95,14 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                     return;
                 }
 
+                const payload = {
+                    ...value,
+                };
+
                 const formData = new FormData();
-                Object.entries(value).forEach(([key, val]) => {
+                Object.entries(payload).forEach(([key, val]) => {
                     if (val !== undefined && val !== null && val !== "") {
-                        if (val instanceof File) formData.append(key, val);
-                        else formData.append(key, val.toString());
+                        formData.append(key, val.toString());
                     }
                 });
 
@@ -123,7 +111,6 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                 sessionStorage.removeItem(STORAGE_KEY);
 
                 form.reset();
-                setArchivoSeleccionado({});
                 setFieldErrors({});
                 setMostrarFormulario(false);
                 onClose();
@@ -135,16 +122,12 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
         },
     });
 
-    const campos = data.juridica.desconexion;
     const commonClasses = 'w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring focus:ring-blue-300';
 
     // Labels para los campos jurídicos
     const fieldLabels: { [key: string]: string } = {
         Cedula_Juridica: "Cédula Jurídica",
         Motivo_Desconexion: "Motivo de la Desconexión",
-        Motivo_Otro: "Por favor especifique",
-        Planos_Terreno: "Planos del Terreno",
-        Certificacion_Literal: "Certificacion Literal del Terreno"
     };
 
 
@@ -155,12 +138,10 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                 const parsed = JSON.parse(savedData);
                 // Cargar los valores en el formulario
                 Object.entries(parsed).forEach(([key, value]) => {
-                    if (key !== 'Planos_Terreno' && key !== 'Certificacion_Literal') {
-                        form.setFieldValue(key as any, value as any);
-                        // Si es la cédula jurídica, también actualizar el estado
-                        if (key === 'Cedula_Juridica' && typeof value === 'string') {
-                            setCedulaJuridica(value.replace(/-/g, ''));
-                        }
+                    form.setFieldValue(key as any, value as any);
+                    // Si es la cédula jurídica, también actualizar el estado
+                    if (key === 'Cedula_Juridica' && typeof value === 'string') {
+                        setCedulaJuridica(value.replace(/-/g, ''));
                     }
                 });
             } catch (error) {
@@ -215,9 +196,9 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                                             const formatted = formatCedulaJuridica(e.target.value);
                                             const cedula = formatted.replace(/-/g, '');
                                             field.handleChange(formatted);
-                                            handleFieldChange("Cedula_Juridica", formatted);
+                                            validateField("Cedula_Juridica", formatted, form.state.values);
                                             setCedulaJuridica(cedula);
-                                            form.setFieldValue('Id_Medidor', 0);
+                                            form.setFieldValue('Id_Medidor', undefined);
                                             saveToSessionStorage({ ...form.state.values, Cedula_Juridica: formatted });
                                         }}
                                         placeholder="3-XXX-XXXXXX"
@@ -248,10 +229,8 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                                     onChange={(e) => {
                                         const value = e.target.value as MotivoDesconexion;
                                         field.handleChange(value);
-                                        handleFieldChange("Motivo_Desconexion", value);
-                                        if (value !== 'Otro (especifique)') {
-                                            form.setFieldValue('Motivo_Otro', '');
-                                        }
+                                        validateField("Motivo_Desconexion", value, form.state.values);
+                                        saveToSessionStorage({ ...form.state.values, Motivo_Desconexion: value });
                                     }}
                                     className={commonClasses}
                                 >
@@ -270,37 +249,6 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                         )}
                     </form.Field>
 
-                    {/* Campo Motivo Otro (textarea condicional) */}
-                    {form.state.values.Motivo_Desconexion === 'Otro (especifique)' && (
-                        <form.Field name="Motivo_Otro">
-                            {(field) => (
-                                <div className="mb-3 w-full md:col-span-2">
-                                    <label className="block mb-1 font-medium">
-                                        {fieldLabels["Motivo_Otro"]}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        value={field.state.value as string}
-                                        onChange={(e) => {
-                                            field.handleChange(e.target.value);
-                                            handleFieldChange("Motivo_Otro", e.target.value);
-                                        }}
-                                        placeholder={fieldLabels["Motivo_Otro"]}
-                                        maxLength={250}
-                                        className={`${commonClasses} resize-none h-24 overflow-y-auto scrollbar-thumb-blue-600 scrollbar-thin scrollbar-track-blue-100`}
-                                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                                    />
-                                    {fieldErrors["Motivo_Otro"] && (
-                                        <span className="text-red-500 text-sm block mt-1">{fieldErrors["Motivo_Otro"]}</span>
-                                    )}
-                                    {formErrors["Motivo_Otro"] && !fieldErrors["Motivo_Otro"] && (
-                                        <span className="text-red-500 text-sm block mt-1">{formErrors["Motivo_Otro"]}</span>
-                                    )}
-                                </div>
-                            )}
-                        </form.Field>
-                    )}
-
                     {/* Campo Id_Medidor */}
                     <form.Field name="Id_Medidor">
                         {(field) => (
@@ -308,13 +256,15 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                                 <label className="block mb-1 font-medium">
                                     Medidor <span className="text-red-500">*</span>
                                 </label>
+
                                 <div className="relative">
                                     <select
-                                        value={typeof field.state.value === "number" ? field.state.value || "" : ""}
+                                        value={field.state.value != null ? String(field.state.value) : ""}
                                         onChange={(e) => {
-                                            const value = e.target.value ? Number(e.target.value) : 0;
-                                            field.handleChange(value);
-                                            handleFieldChange("Id_Medidor", value);
+                                            const nextValue = e.target.value ? Number(e.target.value) : undefined;
+                                            field.handleChange(nextValue);
+                                            validateField("Id_Medidor", nextValue, { ...form.state.values, Id_Medidor: nextValue });
+                                            saveToSessionStorage({ ...form.state.values, Id_Medidor: nextValue });
                                         }}
                                         disabled={!cedulaJuridica || isMedidoresLoading}
                                         className={`${commonClasses} ${fieldErrors["Id_Medidor"] ? 'border-red-500 focus:ring-red-300' : ''} ${!cedulaJuridica ? 'bg-gray-100 cursor-not-allowed' : ''}`}
@@ -322,7 +272,7 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                                         <option value="">Selecciona un medidor</option>
                                         {medidores && medidores.length > 0 ? (
                                             medidores.map((medidor) => (
-                                                <option key={medidor.Id_Medidor} value={medidor.Id_Medidor || ""}>
+                                                <option key={medidor.Id_Medidor} value={String(medidor.Id_Medidor ?? "")}>
                                                     {medidor.Numero_Medidor} {medidor.Estado ? `(${medidor.Estado})` : ""}
                                                 </option>
                                             ))
@@ -332,12 +282,14 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                                             )
                                         )}
                                     </select>
+
                                     {isMedidoresLoading && (
                                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                             <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
                                         </div>
                                     )}
                                 </div>
+
                                 {fieldErrors["Id_Medidor"] && (
                                     <span className="text-red-500 text-sm block mt-1">{fieldErrors["Id_Medidor"]}</span>
                                 )}
@@ -347,77 +299,6 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                             </div>
                         )}
                     </form.Field>
-
-                    {/* Campos de archivos*/}
-                    {Object.entries(campos)
-                        .filter(([fieldName]) => fieldName === "Planos_Terreno" || fieldName === "Certificacion_Literal")
-                        .map(([fieldName, fieldProps]) => (
-                            <form.Field key={fieldName} name={fieldName as keyof typeof form.state.values}>
-                                {(field) => {
-                                    const archivoActual = archivoSeleccionado[fieldName] ?? null;
-                                    return (
-                                        <div className="mb-3 w-full">
-                                            <label className="block mb-1 font-medium">
-                                                {fieldLabels[fieldName]}
-                                                {fieldProps.required && <span className="text-red-500">*</span>}
-                                            </label>
-                                            <input
-                                                type="file"
-                                                accept=".png,.jpg,.jpeg,.heic,.pdf"
-                                                disabled={!!archivoActual}
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0] ?? undefined;
-                                                    field.handleChange(file);
-                                                    setArchivoSeleccionado(prev => ({ ...prev, [fieldName]: file ?? null }));
-                                                    handleFieldChange(fieldName, file);
-                                                }}
-                                                className="hidden"
-                                                id={fieldName}
-                                                ref={fieldName === "Planos_Terreno" ? planosInputRef : escrituraInputRef}
-                                                key={archivoActual ? archivoActual.name : fieldName}
-                                            />
-                                            <label
-                                                htmlFor={fieldName}
-                                                className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-700 cursor-pointer'}`}
-                                            >
-                                                {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
-                                            </label>
-                                            {archivoActual && (
-                                                <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
-                                                    <span>{archivoActual.name}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            field.handleChange(undefined);
-                                                            setArchivoSeleccionado(prev => ({ ...prev, [fieldName]: null }));
-                                                            setFieldErrors(prev => ({
-                                                                ...prev,
-                                                                [fieldName]: `Debe subir el archivo`,
-                                                            }));
-                                                            if (fieldName === "Planos_Terreno" && planosInputRef.current) {
-                                                                planosInputRef.current.value = '';
-                                                            }
-                                                            if (fieldName === "Certificacion_Literal" && escrituraInputRef.current) {
-                                                                escrituraInputRef.current.value = '';
-                                                            }
-                                                        }}
-                                                        className="text-red-500 hover:underline text-xs"
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </div>
-                                            )}
-                                            {fieldErrors[fieldName] && (
-                                                <span className="text-red-500 text-sm block mt-1">{fieldErrors[fieldName]}</span>
-                                            )}
-                                            {formErrors[fieldName] && !fieldErrors[fieldName] && (
-                                                <span className="text-red-500 text-sm block mt-1">{formErrors[fieldName]}</span>
-                                            )}
-                                        </div>
-                                    );
-                                }}
-                            </form.Field>
-                        ))}
                 </div>
 
                 <div className="flex justify-center gap-4 mt-6 ml-50">
@@ -427,7 +308,9 @@ const DesconexionMedidorJuridica = ({ onClose }: Props) => {
                         className="w-[140px] py-2 rounded transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
                         disabled={
                             isSending ||
-                            Object.values(form.state.values).some(val => val === undefined || val === null || val === "") ||
+                            !form.state.values.Cedula_Juridica ||
+                            !form.state.values.Id_Medidor ||
+                            !form.state.values.Motivo_Desconexion ||
                             Object.values(fieldErrors).some(Boolean) ||
                             Object.values(formErrors).some(Boolean)
                         }

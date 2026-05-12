@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAlerts } from '../../../context/AlertContext';
 import { DesconexionMedidorSchema, MotivoDesconexionValues, TipoIdentificacionValues, type MotivoDesconexion, type TipoIdentificacion } from "../../../Schemas/Solicitudes/Fisica/DesconexionMedidor";
 import { useDesconexionFisica, useMedidores } from "../../../Hook/Solicitudes/HookFisicas";
@@ -11,15 +11,12 @@ type Props = {
 const STORAGE_KEY = 'desconexion_fisica_temp';
 
 const FormularioDesconexionMedidor = ({ onClose }: Props) => {
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState<{ [key: string]: File | null }>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
   const [identificacion, setIdentificacion] = useState('');
   const { showError } = useAlerts();
   const mutation = useDesconexionFisica();
-  const planosInputRef = useRef<HTMLInputElement>(null);
-  const escrituraInputRef = useRef<HTMLInputElement>(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(true);
   const { medidores, isLoading: isMedidoresLoading } = useMedidores(identificacion);
 
@@ -76,10 +73,6 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
 
 
   const getPlaceholder = (fieldName: string, tipoIdentificacion?: TipoIdentificacion) => {
-    const placeholders: Record<string, string> = {
-      Direccion_Exacta: 'San José, del Banco Nacional 200m sur',
-      Motivo_Otro: 'Escribe la causa de desconexión',
-    };
     if (fieldName === 'Identificacion') {
       switch (tipoIdentificacion) {
         case "Cedula Nacional": return '123456789';
@@ -88,16 +81,15 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         default: return 'Seleccione tipo de identificación primero';
       }
     }
-    return placeholders[fieldName] || '';
+    return '';
   };
   const saveToSessionStorage = (values: any) => {
     try {
-      // Guardamos solo los campos que siguen en el formulario
       const dataToSave = {
         Tipo_Identificacion: values.Tipo_Identificacion,
         Identificacion: values.Identificacion,
-        Direccion_Exacta: values.Direccion_Exacta,
         Id_Medidor: values.Id_Medidor,
+        Motivo_Desconexion: values.Motivo_Desconexion,
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (error) {
@@ -109,11 +101,7 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
       Tipo_Identificacion: "Cedula Nacional",
       Identificacion: "",
       Motivo_Desconexion: "" as MotivoDesconexion,
-      Motivo_Otro: "",
-      Direccion_Exacta: "",
       Id_Medidor: undefined as number | undefined,
-      Planos_Terreno: undefined as File | undefined,
-      Certificacion_Literal: undefined as File | undefined,
     },
 
     onSubmit: async ({ value }) => {
@@ -128,12 +116,8 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         return;
       }
       try {
-        const motivoSolicitud = value.Motivo_Desconexion === 'Otro (especifique)'
-          ? `${value.Motivo_Desconexion}: ${value.Motivo_Otro?.trim() || ''}`
-          : value.Motivo_Desconexion;
         const payload = {
           ...value,
-          Motivo_Solicitud: motivoSolicitud,
         };
 
         const validation = DesconexionMedidorSchema.safeParse(value);
@@ -152,11 +136,7 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         const formData = new FormData();
         Object.entries(payload).forEach(([key, val]) => {
           if (val !== undefined && val !== null && val !== "") {
-            if (val instanceof File) {
-              formData.append(key, val);
-            } else {
-              formData.append(key, val.toString());
-            }
+            formData.append(key, String(val));
           }
         });
 
@@ -166,7 +146,6 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
 
         form.reset();
         setFieldErrors({});
-        setArchivoSeleccionado({});
         setMostrarFormulario(false);
         onClose();
       } catch (error: any) {
@@ -206,9 +185,7 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         const parsed = JSON.parse(savedData);
         // Cargar los valores en el formulario
         Object.entries(parsed).forEach(([key, value]) => {
-          if (key !== 'Planos_Terreno' && key !== 'Certificacion_Literal' && key !== 'Motivo_Desconexion' && key !== 'Motivo_Otro') {
-            form.setFieldValue(key as any, value as any);
-          }
+          form.setFieldValue(key as any, value as any);
         });
       } catch (error) {
         console.error('Error al cargar datos guardados:', error);
@@ -310,35 +287,6 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
             </form.Field>
           </div>
 
-
-          {/* Dirección Exacta */}
-          <form.Field name="Direccion_Exacta">
-            {(field) => (
-              <div className="mb-3 w-full">
-                <label htmlFor="Direccion_Exacta" className="block mb-1 font-medium">Dirección exacta <span className="text-red-500">*</span></label>
-                <textarea
-                  value={field.state.value}
-                  onChange={(e) => {
-                    field.handleChange(e.target.value);
-                    validateField("Direccion_Exacta", e.target.value, form.state.values);
-                    saveToSessionStorage({ ...form.state.values, Direccion_Exacta: e.target.value });
-                  }}
-                  placeholder={getPlaceholder("Direccion_Exacta")}
-                  maxLength={100}
-                  className={commonClasses}
-                />
-                {/* Solo muestra errores de dirección aquí */}
-                {fieldErrors["Direccion_Exacta"] && (
-                  <span className="text-red-500 text-sm block mt-1">{fieldErrors["Direccion_Exacta"]}</span>
-                )}
-                {formErrors["Direccion_Exacta"] && !fieldErrors["Direccion_Exacta"] && (
-                  <span className="text-red-500 text-sm block mt-1">{formErrors["Direccion_Exacta"]}</span>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-
           {/* Id del Medidor */}
           <div className="mb-3">
             <form.Field name="Id_Medidor">
@@ -403,14 +351,6 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
                     const motivoSeleccionado = e.target.value as MotivoDesconexion;
                     field.handleChange(motivoSeleccionado);
                     validateField("Motivo_Desconexion", motivoSeleccionado, form.state.values);
-                    if (motivoSeleccionado !== 'Otro (especifique)') {
-                      form.setFieldValue('Motivo_Otro', '');
-                      setFieldErrors(prev => {
-                        const newErrors = { ...prev };
-                        delete newErrors['Motivo_Otro'];
-                        return newErrors;
-                      });
-                    }
                     saveToSessionStorage({ ...form.state.values, Motivo_Desconexion: motivoSeleccionado });
                   }}
                   className={commonClasses}
@@ -429,164 +369,6 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
               </div>
             )}
           </form.Field>
-          {form.state.values.Motivo_Desconexion === 'Otro (especifique)' && (
-            <form.Field name="Motivo_Otro">
-              {(field) => (
-                <div className="mb-3 w-full md:col-span-2">
-                  <label htmlFor="Motivo_Otro" className="block mb-1 font-medium">Especifique la causa <span className="text-red-500">*</span></label>
-                  <textarea
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                      validateField("Motivo_Otro", e.target.value, form.state.values);
-                      saveToSessionStorage({ ...form.state.values, Motivo_Otro: e.target.value });
-                    }}
-                    placeholder={getPlaceholder("Motivo_Otro")}
-                    maxLength={250}
-                    className={`${commonClasses} resize-none h-24 overflow-y-auto scrollbar-thumb-blue-600 scrollbar-thin scrollbar-track-blue-100`}
-                  />
-                  {fieldErrors["Motivo_Otro"] && (
-                    <span className="text-red-500 text-sm block mt-1">{fieldErrors["Motivo_Otro"]}</span>
-                  )}
-                  {formErrors["Motivo_Otro"] && !fieldErrors["Motivo_Otro"] && (
-                    <span className="text-red-500 text-sm block mt-1">{formErrors["Motivo_Otro"]}</span>
-                  )}
-                </div>
-              )}
-            </form.Field>
-          )}
-        </div>
-
-        {/* Archivos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-          <form.Field name="Planos_Terreno">
-            {(field) => {
-              const archivoActual = archivoSeleccionado["Planos_Terreno"] ?? null;
-              return (
-                <div className="w-full mb-2">
-                  <label htmlFor="Planos_Terreno" className="block mb-1 font-medium">Planos del terreno <span className="text-red-500">*</span></label>
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.heic,.pdf"
-                    disabled={!!archivoActual}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      field.handleChange(file ?? undefined);
-                      setArchivoSeleccionado(prev => ({ ...prev, ["Planos_Terreno"]: file }));
-                      validateField("Planos_Terreno", file);
-                    }}
-                    className="hidden"
-                    id="Planos_Terreno"
-                    ref={planosInputRef}
-                    key={archivoActual ? archivoActual.name : 'planos'}
-                  />
-                  <label
-                    htmlFor="Planos_Terreno"
-                    className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#6FCAF1] cursor-pointer'}`}
-                  >
-                    {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
-                  </label>
-                  {archivoActual && (
-                    <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
-                      <span>{archivoActual.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          field.handleChange(undefined);
-                          setArchivoSeleccionado(prev => ({ ...prev, ["Planos_Terreno"]: null }));
-                          setFieldErrors(prev => ({
-                            ...prev,
-                            ["Planos_Terreno"]: `Debe subir el plano del terreno`,
-                          }));
-                          if (planosInputRef.current) {
-                            planosInputRef.current.value = '';
-                          }
-                        }}
-                        className="text-red-500 hover:underline text-xs"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  )}
-                  {/*muestra errores de planos*/}
-                  {fieldErrors["Planos_Terreno"] && (
-                    <span className="text-red-500 text-sm block mt-1">
-                      {fieldErrors["Planos_Terreno"]}
-                    </span>
-                  )}
-                  {formErrors["Planos_Terreno"] && !fieldErrors["Planos_Terreno"] && (
-                    <span className="text-red-500 text-sm block mt-1">
-                      {formErrors["Planos_Terreno"]}
-                    </span>
-                  )}
-                </div>
-              );
-            }}
-          </form.Field>
-          <form.Field name="Certificacion_Literal">
-            {(field) => {
-              const archivoActual = archivoSeleccionado["Certificacion_Literal"] ?? null;
-              return (
-                <div className="w-full mb-2">
-                  <label htmlFor="Certificacion_Literal" className="block mb-1 font-medium">Certificacion Literal del terreno <span className="text-red-500">*</span></label>
-                  <input
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.heic,.pdf"
-                    disabled={!!archivoActual}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      field.handleChange(file ?? undefined);
-                      setArchivoSeleccionado(prev => ({ ...prev, ["Certificacion_Literal"]: file }));
-                      validateField("Certificacion_Literal", file);
-                    }}
-                    className="hidden"
-                    id="Certificacion_Literal"
-                    ref={escrituraInputRef}
-                    key={archivoActual ? archivoActual.name : 'escritura'}
-                  />
-                  <label
-                    htmlFor="Certificacion_Literal"
-                    className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#6FCAF1] cursor-pointer'}`}
-                  >
-                    {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
-                  </label>
-                  {archivoActual && (
-                    <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
-                      <span>{archivoActual.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          field.handleChange(undefined);
-                          setArchivoSeleccionado(prev => ({ ...prev, ["Certificacion_Literal"]: null }));
-                          setFieldErrors(prev => ({
-                            ...prev,
-                            ["Certificacion_Literal"]: `Debe subir la certificacion literal del terreno`,
-                          }));
-                          if (escrituraInputRef.current) {
-                            escrituraInputRef.current.value = '';
-                          }
-                        }}
-                        className="text-red-500 hover:underline text-xs"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  )}
-                  {/* muestra errores de certificacion literal*/}
-                  {fieldErrors["Certificacion_Literal"] && (
-                    <span className="text-red-500 text-sm block mt-1">
-                      {fieldErrors["Certificacion_Literal"]}
-                    </span>
-                  )}
-                  {formErrors["Certificacion_Literal"] && !fieldErrors["Certificacion_Literal"] && (
-                    <span className="text-red-500 text-sm block mt-1">
-                      {formErrors["Certificacion_Literal"]}
-                    </span>
-                  )}
-                </div>
-              );
-            }}
-          </form.Field>
         </div>
 
         <div className="flex justify-center gap-4 mt-6 ml-50">
@@ -599,7 +381,10 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
               className="w-[140px] py-2 rounded transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
               disabled={
                 isSending ||
-                Object.values(form.state.values).some(val => val === undefined || val === null || val === "") ||
+                !form.state.values.Tipo_Identificacion ||
+                !form.state.values.Identificacion ||
+                !form.state.values.Id_Medidor ||
+                !form.state.values.Motivo_Desconexion ||
                 Object.values(fieldErrors).some(Boolean) ||
                 Object.values(formErrors).some(Boolean)
               }
