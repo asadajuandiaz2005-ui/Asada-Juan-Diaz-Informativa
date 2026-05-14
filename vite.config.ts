@@ -76,12 +76,16 @@ function getManualChunk(id: string): string | undefined {
     return 'tanstack-vendor'
   }
 
-  if (
-    normalizedId.includes('/framer-motion/') ||
-    normalizedId.includes('/lucide-react/') ||
-    normalizedId.includes('/react-icons/')
-  ) {
-    return 'motion-icons-vendor'
+  if (normalizedId.includes('/framer-motion/')) {
+    return 'framer-motion-vendor'
+  }
+
+  if (normalizedId.includes('/lucide-react/')) {
+    return 'lucide-vendor'
+  }
+
+  if (normalizedId.includes('/react-icons/')) {
+    return 'react-icons-vendor'
   }
 
   if (normalizedId.includes('/leaflet/')) {
@@ -155,7 +159,7 @@ export default defineConfig({
       resolveDependencies: (_filename, deps) =>
         deps.filter(
           (d) =>
-            !/(?:maps-vendor|forms-ui-vendor|carousel-vendor|motion-icons-vendor|utils-vendor)-[^/]+\.js$/.test(d)
+            !/(?:maps-vendor|forms-ui-vendor|carousel-vendor|framer-motion-vendor|lucide-vendor|react-icons-vendor|utils-vendor)-[^/]+\.js$/.test(d)
         ),
     },
     rollupOptions: {
