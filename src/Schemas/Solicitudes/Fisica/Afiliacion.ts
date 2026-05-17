@@ -47,8 +47,7 @@ export const AfiliacionSchema = z.object({
   Correo: z.string()
     .min(1, 'El correo no puede estar vacío')
     .max(99, 'El correo no puede tener más de 100 caracteres')
-    .email('El correo electrónico debe tener un formato válido')
-    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, { message: 'El formato del correo electrónico no es válido' })
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, { message: 'El formato del correo electrónico no es válido' })
     .transform(val => val.trim().toLowerCase()),
 
   Numero_Telefono: z.string()

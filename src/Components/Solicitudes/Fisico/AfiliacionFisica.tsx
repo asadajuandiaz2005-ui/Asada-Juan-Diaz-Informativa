@@ -126,7 +126,7 @@ const FormularioAfiliacion = ({ onClose, initialView = "afiliacion" }: Props) =>
       Nombre: 'Juan Carlos',
       Apellido1: 'Pérez',
       Apellido2: 'González',
-      Correo: 'ejemplo@gmail.com',
+      Correo: 'ejemplo@correo.com',
       Numero_Telefono: '+50688887777',
       Direccion_Exacta: 'San José, del Banco Nacional 200m sur',
       Edad: '25',

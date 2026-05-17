@@ -14,7 +14,7 @@ export const AfiliacionJuridicaSchema = z.object({
   Correo: z.string()
     .min(1, 'El correo electrónico es obligatorio')
     .max(255, 'El correo no puede tener más de 255 caracteres')
-    .email('El correo electrónico no es válido'),
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, { message: 'El formato del correo electrónico no es válido' }),
 
   Numero_Telefono: z.string()
     .min(1, 'El número de teléfono es obligatorio')

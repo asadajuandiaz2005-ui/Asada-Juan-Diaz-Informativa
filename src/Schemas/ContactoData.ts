@@ -21,7 +21,10 @@ export function getDynamicContactoSchema(campos: Record<string, any>) {
         .min(1, `${fieldProps.label} es requerido`)
         .max(maxLength, `${fieldProps.label} no puede exceder ${maxLength+1} caracteres`)
       if (fieldName === 'Correo') {
-        schema = (schema as z.ZodString).email('El correo debe ser un email válido');
+        schema = (schema as z.ZodString).regex(
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          'El correo debe ser un email válido'
+        );
       }
       dynamicSchemaShape[fieldName] = schema;
     } else {
@@ -47,7 +50,10 @@ export function getFieldSchemas(campos: Record<string, any>): Record<string, z.Z
         .min(1, `${fieldProps.label} es requerido`)
         .max(maxLength, `${fieldProps.label} no puede exceder ${maxLength+1} caracteres`)
       if (fieldName === 'Correo') {
-        schema = (schema as z.ZodString).email('El correo debe ser un email válido');
+        schema = (schema as z.ZodString).regex(
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          'El correo debe ser un email válido'
+        );
       }
       fieldSchemas[fieldName] = schema;
     } else {
