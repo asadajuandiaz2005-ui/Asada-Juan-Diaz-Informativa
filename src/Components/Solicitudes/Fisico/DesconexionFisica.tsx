@@ -15,6 +15,8 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
   const [identificacion, setIdentificacion] = useState('');
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState('');
+  const [motivoOtro, setMotivoOtro] = useState('');
   const { showError } = useAlerts();
   const mutation = useDesconexionFisica();
   const [mostrarFormulario, setMostrarFormulario] = useState(true);
@@ -90,6 +92,8 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         Identificacion: values.Identificacion,
         Id_Medidor: values.Id_Medidor,
         Motivo_Desconexion: values.Motivo_Desconexion,
+        Motivo_Desconexion_Seleccionado: values.Motivo_Desconexion_Seleccionado,
+        Motivo_Desconexion_Otro: values.Motivo_Desconexion_Otro,
       };
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (error) {
@@ -116,11 +120,12 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         return;
       }
       try {
-        const payload = {
+        const valueToSubmit = {
           ...value,
+          Motivo_Desconexion: motivoSeleccionado === 'Otro' ? motivoOtro.trim() : String(value.Motivo_Desconexion || '').trim(),
         };
 
-        const validation = DesconexionMedidorSchema.safeParse(value);
+        const validation = DesconexionMedidorSchema.safeParse(valueToSubmit);
         if (!validation.success) {
           const validationErrors: Record<string, string> = {};
           validation.error.errors.forEach((err) => {
@@ -134,7 +139,7 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
         }
 
         const formData = new FormData();
-        Object.entries(payload).forEach(([key, val]) => {
+        Object.entries(valueToSubmit).forEach(([key, val]) => {
           if (val !== undefined && val !== null && val !== "") {
             formData.append(key, String(val));
           }
@@ -183,10 +188,23 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        // Cargar los valores en el formulario
         Object.entries(parsed).forEach(([key, value]) => {
-          form.setFieldValue(key as any, value as any);
+          if (key === 'Tipo_Identificacion' || key === 'Identificacion' || key === 'Id_Medidor') {
+            form.setFieldValue(key as any, value as any);
+          }
         });
+
+        const savedMotivo = typeof parsed.Motivo_Desconexion === 'string' ? parsed.Motivo_Desconexion : '';
+        const savedSeleccionado = typeof parsed.Motivo_Desconexion_Seleccionado === 'string'
+          ? parsed.Motivo_Desconexion_Seleccionado
+          : (MotivoDesconexionValues.includes(savedMotivo as any) ? savedMotivo : savedMotivo ? 'Otro' : '');
+        const savedOtro = typeof parsed.Motivo_Desconexion_Otro === 'string'
+          ? parsed.Motivo_Desconexion_Otro
+          : (savedSeleccionado === 'Otro' ? savedMotivo : '');
+
+        setMotivoSeleccionado(savedSeleccionado);
+        setMotivoOtro(savedOtro);
+        form.setFieldValue('Motivo_Desconexion', savedSeleccionado === 'Otro' ? savedOtro : savedMotivo);
       } catch (error) {
         console.error('Error al cargar datos guardados:', error);
       }
@@ -343,23 +361,73 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
           {/* Motivo de Solicitud */}
           <form.Field name="Motivo_Desconexion">
             {(field) => (
-              <div className="mb-3 w-full md:col-span-2">
+              <div className="mb-3 w-full">
                 <label htmlFor="Motivo_Desconexion" className="block mb-1 font-medium">Motivo de desconexión <span className="text-red-500">*</span></label>
                 <select
-                  value={field.state.value}
+                  value={motivoSeleccionado}
                   onChange={(e) => {
-                    const motivoSeleccionado = e.target.value as MotivoDesconexion;
-                    field.handleChange(motivoSeleccionado);
-                    validateField("Motivo_Desconexion", motivoSeleccionado, form.state.values);
-                    saveToSessionStorage({ ...form.state.values, Motivo_Desconexion: motivoSeleccionado });
+                    const value = e.target.value;
+                    setMotivoSeleccionado(value);
+
+                    if (value === 'Otro') {
+                      setMotivoOtro('');
+                      field.handleChange('');
+                      setFieldErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors['Motivo_Desconexion'];
+                        return newErrors;
+                      });
+                      saveToSessionStorage({
+                        ...form.state.values,
+                        Motivo_Desconexion: '',
+                        Motivo_Desconexion_Seleccionado: value,
+                        Motivo_Desconexion_Otro: '',
+                      });
+                      return;
+                    }
+
+                    field.handleChange(value);
+                    validateField("Motivo_Desconexion", value, form.state.values);
+                    saveToSessionStorage({
+                      ...form.state.values,
+                      Motivo_Desconexion: value,
+                      Motivo_Desconexion_Seleccionado: value,
+                      Motivo_Desconexion_Otro: '',
+                    });
                   }}
                   className={commonClasses}
                 >
-                  <option value="" disabled selected>Elije una opcion</option>
+                  <option value="">Elije una opcion</option>
                   {MotivoDesconexionValues.map((motivo) => (
                     <option key={motivo} value={motivo}>{motivo}</option>
                   ))}
                 </select>
+                {motivoSeleccionado === 'Otro' && (
+                  <div className="mt-3">
+                    <label htmlFor="Motivo_Desconexion_Otro" className="block mb-1 font-medium">
+                      Especifique el motivo <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="Motivo_Desconexion_Otro"
+                      value={motivoOtro}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setMotivoOtro(value);
+                        field.handleChange(value);
+                        validateField("Motivo_Desconexion", value, form.state.values);
+                        saveToSessionStorage({
+                          ...form.state.values,
+                          Motivo_Desconexion: value,
+                          Motivo_Desconexion_Seleccionado: 'Otro',
+                          Motivo_Desconexion_Otro: value,
+                        });
+                      }}
+                      placeholder="Escriba el motivo de desconexión"
+                      maxLength={250}
+                      className={`${commonClasses} resize-none h-24 overflow-y-auto scrollbar-thumb-blue-600 scrollbar-thin scrollbar-track-blue-100`}
+                    />
+                  </div>
+                )}
                 {fieldErrors["Motivo_Desconexion"] && (
                   <span className="text-red-500 text-sm block mt-1">{fieldErrors["Motivo_Desconexion"]}</span>
                 )}
@@ -384,7 +452,7 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
                 !form.state.values.Tipo_Identificacion ||
                 !form.state.values.Identificacion ||
                 !form.state.values.Id_Medidor ||
-                !form.state.values.Motivo_Desconexion ||
+                !(motivoSeleccionado === 'Otro' ? motivoOtro.trim() : form.state.values.Motivo_Desconexion) ||
                 Object.values(fieldErrors).some(Boolean) ||
                 Object.values(formErrors).some(Boolean)
               }
@@ -401,9 +469,9 @@ const FormularioDesconexionMedidor = ({ onClose }: Props) => {
               Cancelar
             </button>
           </div>
-          </div>
+        </div>
 
- 
+
       </form>
     </div>
   );
