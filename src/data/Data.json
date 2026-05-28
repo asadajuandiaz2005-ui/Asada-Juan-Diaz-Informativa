@@ -516,7 +516,7 @@
         "required": true
       },
       "Descripcion": {
-        "label": "Descripción de tu queja",
+        "label": "Descripción de tu reporte",
         "type": "textarea",
         "required": true
       },
