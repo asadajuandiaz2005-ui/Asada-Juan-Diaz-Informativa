@@ -48,6 +48,7 @@ const MedidorExtraJuridica = ({ onClose }: Props) => {
 
                 Planos_Terreno: new File([''], 'test.jpg', { type: 'image/jpeg' }),
                 Certificacion_Literal: new File([''], 'test.jpg', { type: 'image/jpeg' }),
+                Direccion_Exacta: 'Calle ejemplo 123',
             };
             dummy[fieldName] = value;
 
@@ -97,6 +98,7 @@ const MedidorExtraJuridica = ({ onClose }: Props) => {
             const dataToSave = {
 
                 Cedula_Juridica: values.Cedula_Juridica,
+                Direccion_Exacta: values.Direccion_Exacta,
 
             };
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
@@ -115,6 +117,7 @@ const MedidorExtraJuridica = ({ onClose }: Props) => {
         defaultValues: {
 
             Cedula_Juridica: '',
+            Direccion_Exacta: '',
 
             Planos_Terreno: undefined as File | undefined,
             Certificacion_Literal: undefined as File | undefined,
@@ -148,6 +151,7 @@ const MedidorExtraJuridica = ({ onClose }: Props) => {
                 ...value,
 
                 Cedula_Juridica: (value.Cedula_Juridica || '').trim(),
+                Direccion_Exacta: (value.Direccion_Exacta || '').trim(),
 
             };
 
@@ -244,206 +248,231 @@ const MedidorExtraJuridica = ({ onClose }: Props) => {
 
     return (
         <div className="flex justify-center text-gray-800 p-3 sm:p-4 w-full">
-        <form
-            className="w-full text-gray-800"
-            onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-            }}
-        >
-            <h2 className="text-center text-xl font-semibold mb-4">Solicitud de Medidor Extra - Persona Jurídica</h2>
+            <form
+                className="w-full text-gray-800"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    form.handleSubmit();
+                }}
+            >
+                <h2 className="text-center text-xl font-semibold mb-4">Solicitud de Medidor Extra - Persona Jurídica</h2>
 
-            {formErrors.general && (
-                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {formErrors.general}
-                </div>
-            )}
+                {formErrors.general && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                        {formErrors.general}
+                    </div>
+                )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2">
-                {/* Cédula Jurídica */}
-                <form.Field name="Cedula_Juridica">
-                    {(field) => (
-                        <div className="mb-3">
-                            <label className="block mb-1 font-semibold text-gray-700">
-                                Cédula Jurídica <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="text"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2">
+                    {/* Cédula Jurídica */}
+                    <form.Field name="Cedula_Juridica">
+                        {(field) => (
+                            <div className="mb-3">
+                                <label className="block mb-1 font-semibold text-gray-700">
+                                    Cédula Jurídica <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={field.state.value}
+                                        onChange={(e) => {
+                                            handleCedulaJuridicaChange(e.target.value);
+                                            saveToSessionStorage({ ...form.state.values, Cedula_Juridica: formatCedulaJuridica(e.target.value) });
+                                        }}
+                                        placeholder="3-101-123456"
+                                        maxLength={12}
+                                        className={`${commonClasses} ${(fieldErrors["Cedula_Juridica"] || formErrors["Cedula_Juridica"]) ? 'border-red-500' : ''}`}
+                                    />
+                                    {loadingCedula && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">Formato: 3-XXX-XXXXXX</p>
+                                {fieldErrors["Cedula_Juridica"] && (
+                                    <span className="text-red-500 text-sm block mt-1">{fieldErrors["Cedula_Juridica"]}</span>
+                                )}
+                                {formErrors["Cedula_Juridica"] && !fieldErrors["Cedula_Juridica"] && (
+                                    <span className="text-red-500 text-sm block mt-1">{formErrors["Cedula_Juridica"]}</span>
+                                )}
+                            </div>
+                        )}
+                    </form.Field>
+                    {/* Dirección exacta */}
+                    <form.Field name="Direccion_Exacta">
+                        {(field) => (
+                            <div className="mb-3">
+                                <label className="block mb-1 font-semibold text-gray-700">Dirección exacta <span className="text-red-500">*</span></label>
+                                <textarea
                                     value={field.state.value}
                                     onChange={(e) => {
-                                        handleCedulaJuridicaChange(e.target.value);
-                                        saveToSessionStorage({ ...form.state.values, Cedula_Juridica: formatCedulaJuridica(e.target.value) });
+                                        field.handleChange(e.target.value);
+                                        validateField("Direccion_Exacta", e.target.value);
+                                        saveToSessionStorage({ ...form.state.values, Direccion_Exacta: e.target.value });
                                     }}
-                                    placeholder="3-101-123456"
-                                    maxLength={12}
-                                    className={`${commonClasses} ${(fieldErrors["Cedula_Juridica"] || formErrors["Cedula_Juridica"]) ? 'border-red-500' : ''}`}
+                                    placeholder="200 metros del perro echado"
+                                    rows={3}
+                                    className={`${commonClasses} ${(fieldErrors["Direccion_Exacta"] || formErrors["Direccion_Exacta"]) ? 'border-red-500' : ''}`}
                                 />
-                                {loadingCedula && (
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                        <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
+                                {fieldErrors["Direccion_Exacta"] && (
+                                    <span className="text-red-500 text-sm block mt-1">{fieldErrors["Direccion_Exacta"]}</span>
+                                )}
+                                {formErrors["Direccion_Exacta"] && !fieldErrors["Direccion_Exacta"] && (
+                                    <span className="text-red-500 text-sm block mt-1">{formErrors["Direccion_Exacta"]}</span>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Formato: 3-XXX-XXXXXX</p>
-                            {fieldErrors["Cedula_Juridica"] && (
-                                <span className="text-red-500 text-sm block mt-1">{fieldErrors["Cedula_Juridica"]}</span>
-                            )}
-                            {formErrors["Cedula_Juridica"] && !fieldErrors["Cedula_Juridica"] && (
-                                <span className="text-red-500 text-sm block mt-1">{formErrors["Cedula_Juridica"]}</span>
-                            )}
-                        </div>
-                    )}
-                </form.Field>
-            </div>
+                        )}
+                    </form.Field>
+                </div>
 
-            {/* Archivos */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 mt-2">
-                <form.Field name="Planos_Terreno">
-                    {(field) => {
-                        const archivoActual = archivoSeleccionado["Planos_Terreno"] ?? null;
-                        return (
-                            <div className="w-full mb-2">
-                                <label className="block mb-1 font-semibold text-gray-700">Planos del terreno <span className="text-red-500">*</span></label>
-                                <input
-                                    type="file"
-                                    accept=".png,.jpg,.jpeg,.heic,.pdf"
-                                    disabled={!!archivoActual}
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0] ?? null;
-                                        field.handleChange(file ?? undefined);
-                                        setArchivoSeleccionado(prev => ({ ...prev, ["Planos_Terreno"]: file }));
-                                        validateField("Planos_Terreno", file);
-                                    }}
-                                    className="hidden"
-                                    id="planos_medidor_juridico"
-                                    ref={planosInputRef}
-                                    key={archivoActual ? archivoActual.name : 'planos'}
-                                />
-                                <label
-                                    htmlFor="planos_medidor_juridico"
-                                    className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#6FCAF1] cursor-pointer'}`}
-                                >
-                                    {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
-                                </label>
-                                {archivoActual && (
-                                    <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
-                                        <span>{archivoActual.name}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                field.handleChange(undefined);
-                                                setArchivoSeleccionado(prev => ({ ...prev, ["Planos_Terreno"]: null }));
-                                                setFieldErrors(prev => ({
-                                                    ...prev,
-                                                    ["Planos_Terreno"]: `Debe subir el plano del terreno`,
-                                                }));
-                                                if (planosInputRef.current) planosInputRef.current.value = "";
-                                            }}
-                                            className="text-red-500 hover:underline text-xs"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                )}
-                                {fieldErrors["Planos_Terreno"] && (
-                                    <span className="text-red-500 text-sm block mt-1">{fieldErrors["Planos_Terreno"]}</span>
-                                )}
-                                {formErrors["Planos_Terreno"] && !fieldErrors["Planos_Terreno"] && (
-                                    <span className="text-red-500 text-sm block mt-1">{formErrors["Planos_Terreno"]}</span>
-                                )}
-                            </div>
-                        );
-                    }}
-                </form.Field>
-                <form.Field name="Certificacion_Literal">
-                    {(field) => {
-                        const archivoActual = archivoSeleccionado["Certificacion_Literal"] ?? null;
-                        return (
-                            <div className="w-full mb-2">
-                                <label className="block mb-1 font-semibold text-gray-700">Certificacion Literal del terreno <span className="text-red-500">*</span></label>
-                                <input
-                                    type="file"
-                                    accept=".png,.jpg,.jpeg,.heic,.pdf"
-                                    disabled={!!archivoActual}
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0] ?? null;
-                                        field.handleChange(file ?? undefined);
-                                        setArchivoSeleccionado(prev => ({ ...prev, ["Certificacion_Literal"]: file }));
-                                        validateField("Certificacion_Literal", file);
-                                    }}
-                                    className="hidden"
-                                    id="escritura_medidor_juridico"
-                                    ref={escrituraInputRef}
-                                    key={archivoActual ? archivoActual.name : 'escritura'}
-                                />
-                                <label
-                                    htmlFor="escritura_medidor_juridico"
-                                    className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#6FCAF1] cursor-pointer'}`}
-                                >
-                                    {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
-                                </label>
-                                {archivoActual && (
-                                    <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
-                                        <span>{archivoActual.name}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                field.handleChange(undefined);
-                                                setArchivoSeleccionado(prev => ({ ...prev, ["Certificacion_Literal"]: null }));
-                                                setFieldErrors(prev => ({
-                                                    ...prev,
-                                                    ["Certificacion_Literal"]: `Debe subir la certificacion literal del terreno`,
-                                                }));
-                                                if (escrituraInputRef.current) escrituraInputRef.current.value = "";
-                                            }}
-                                            className="text-red-500 hover:underline text-xs"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                )}
-                                {fieldErrors["Certificacion_Literal"] && (
-                                    <span className="text-red-500 text-sm block mt-1">{fieldErrors["Certificacion_Literal"]}</span>
-                                )}
-                                {formErrors["Certificacion_Literal"] && !fieldErrors["Certificacion_Literal"] && (
-                                    <span className="text-red-500 text-sm block mt-1">{formErrors["Certificacion_Literal"]}</span>
-                                )}
-                            </div>
-                        );
-                    }}
-                </form.Field>
-            </div>
+                {/* Archivos */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 mt-2">
+                    <form.Field name="Planos_Terreno">
+                        {(field) => {
+                            const archivoActual = archivoSeleccionado["Planos_Terreno"] ?? null;
+                            return (
+                                <div className="w-full mb-2">
+                                    <label className="block mb-1 font-semibold text-gray-700">Planos del terreno <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.heic,.pdf"
+                                        disabled={!!archivoActual}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0] ?? null;
+                                            field.handleChange(file ?? undefined);
+                                            setArchivoSeleccionado(prev => ({ ...prev, ["Planos_Terreno"]: file }));
+                                            validateField("Planos_Terreno", file);
+                                        }}
+                                        className="hidden"
+                                        id="planos_medidor_juridico"
+                                        ref={planosInputRef}
+                                        key={archivoActual ? archivoActual.name : 'planos'}
+                                    />
+                                    <label
+                                        htmlFor="planos_medidor_juridico"
+                                        className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#6FCAF1] cursor-pointer'}`}
+                                    >
+                                        {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
+                                    </label>
+                                    {archivoActual && (
+                                        <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
+                                            <span>{archivoActual.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    field.handleChange(undefined);
+                                                    setArchivoSeleccionado(prev => ({ ...prev, ["Planos_Terreno"]: null }));
+                                                    setFieldErrors(prev => ({
+                                                        ...prev,
+                                                        ["Planos_Terreno"]: `Debe subir el plano del terreno`,
+                                                    }));
+                                                    if (planosInputRef.current) planosInputRef.current.value = "";
+                                                }}
+                                                className="text-red-500 hover:underline text-xs"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    )}
+                                    {fieldErrors["Planos_Terreno"] && (
+                                        <span className="text-red-500 text-sm block mt-1">{fieldErrors["Planos_Terreno"]}</span>
+                                    )}
+                                    {formErrors["Planos_Terreno"] && !fieldErrors["Planos_Terreno"] && (
+                                        <span className="text-red-500 text-sm block mt-1">{formErrors["Planos_Terreno"]}</span>
+                                    )}
+                                </div>
+                            );
+                        }}
+                    </form.Field>
+                    <form.Field name="Certificacion_Literal">
+                        {(field) => {
+                            const archivoActual = archivoSeleccionado["Certificacion_Literal"] ?? null;
+                            return (
+                                <div className="w-full mb-2">
+                                    <label className="block mb-1 font-semibold text-gray-700">Certificacion Literal del terreno <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.heic,.pdf"
+                                        disabled={!!archivoActual}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0] ?? null;
+                                            field.handleChange(file ?? undefined);
+                                            setArchivoSeleccionado(prev => ({ ...prev, ["Certificacion_Literal"]: file }));
+                                            validateField("Certificacion_Literal", file);
+                                        }}
+                                        className="hidden"
+                                        id="escritura_medidor_juridico"
+                                        ref={escrituraInputRef}
+                                        key={archivoActual ? archivoActual.name : 'escritura'}
+                                    />
+                                    <label
+                                        htmlFor="escritura_medidor_juridico"
+                                        className={`inline-block text-white bg-blue-600 px-3 py-1 rounded text-sm ${archivoActual ? 'cursor-not-allowed opacity-50' : 'hover:bg-[#6FCAF1] cursor-pointer'}`}
+                                    >
+                                        {archivoActual ? 'Archivo cargado' : 'Subir archivo'}
+                                    </label>
+                                    {archivoActual && (
+                                        <div className="border rounded-md p-3 bg-gray-50 pb-2 mb-2 flex justify-between items-center">
+                                            <span>{archivoActual.name}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    field.handleChange(undefined);
+                                                    setArchivoSeleccionado(prev => ({ ...prev, ["Certificacion_Literal"]: null }));
+                                                    setFieldErrors(prev => ({
+                                                        ...prev,
+                                                        ["Certificacion_Literal"]: `Debe subir la certificacion literal del terreno`,
+                                                    }));
+                                                    if (escrituraInputRef.current) escrituraInputRef.current.value = "";
+                                                }}
+                                                className="text-red-500 hover:underline text-xs"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    )}
+                                    {fieldErrors["Certificacion_Literal"] && (
+                                        <span className="text-red-500 text-sm block mt-1">{fieldErrors["Certificacion_Literal"]}</span>
+                                    )}
+                                    {formErrors["Certificacion_Literal"] && !fieldErrors["Certificacion_Literal"] && (
+                                        <span className="text-red-500 text-sm block mt-1">{formErrors["Certificacion_Literal"]}</span>
+                                    )}
+                                </div>
+                            );
+                        }}
+                    </form.Field>
+                </div>
 
-            {/* Botones */}
-          
-          <div className="flex justify-start md:justify-end items-center w-full md:w-auto gap-3 mt-6">
-            <button
-              type="submit"
-              className="w-sm md:w-auto px-1 py-1.5 md:px-6 md:py-4 bg-blue-600 hover:bg-blue-700 rounded text-white disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md: text-lg font-medium"
-               disabled={
-                        mutation.isPending ||
-                        loadingMedidores ||
-                        Object.values(form.state.values).some(val => val === undefined || val === null || val === "") ||
-                        Object.values(fieldErrors).some(Boolean) ||
-                        hasBlockingFormErrors
-                    }
-                >
-                    {mutation.isPending ? 'Enviando...' : 'Enviar Solicitud'}
-                </button>
-                <button
-                    type="button"
-                    onClick={onClose}
-                    disabled={mutation.isPending}
-                   className="w-xs md:w-auto px-1 py-1.5 md:px-6 md:py-4 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-60 text-sm md: text-lg disabled:cursor-not-allowed"
-                >
-                    Cancelar
-                </button>
-            </div>
-        </form>
+                {/* Botones */}
+
+                <div className="flex justify-start md:justify-end items-center w-full md:w-auto gap-3 mt-6">
+                    <button
+                        type="submit"
+                        className="w-sm md:w-auto px-1 py-1.5 md:px-6 md:py-4 bg-blue-600 hover:bg-blue-700 rounded text-white disabled:bg-gray-400 disabled:cursor-not-allowed text-sm md: text-lg font-medium"
+                        disabled={
+                            mutation.isPending ||
+                            loadingMedidores ||
+                            Object.values(form.state.values).some(val => val === undefined || val === null || val === "") ||
+                            Object.values(fieldErrors).some(Boolean) ||
+                            hasBlockingFormErrors
+                        }
+                    >
+                        {mutation.isPending ? 'Enviando...' : 'Enviar Solicitud'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        disabled={mutation.isPending}
+                        className="w-xs md:w-auto px-1 py-1.5 md:px-6 md:py-4 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors disabled:opacity-60 text-sm md: text-lg disabled:cursor-not-allowed"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };

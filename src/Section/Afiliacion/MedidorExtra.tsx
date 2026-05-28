@@ -38,7 +38,7 @@ const TarjetaCliente = ({
   iconClassName,
 }: TarjetaClienteProps) => {
   return (
-    <article className={`group relative overflow-hidden rounded-[24px] border bg-white p-3.5 shadow-md sm:p-4 lg:p-5 transition-all duration-300
+    <article className={`group relative overflow-hidden rounded-[24px] border bg-white p-3.5 shadow-md sm:p-4 lg:p-5 transition-all duration-300 h-full flex flex-col
       ${isSelected ? 'border-blue-400 shadow-lg ring-2 ring-blue-200' : 'border-sky-200 hover:-translate-y-1 hover:shadow-lg hover:border-blue-300'}`}>
       <div className="rounded-[20px] border border-sky-200 bg-sky-50 p-4 text-slate-800">
         <div className="flex items-start justify-between gap-3">
@@ -54,7 +54,7 @@ const TarjetaCliente = ({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex-1">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600 sm:text-xs">Lista de requisitos</h3>
         <ul className="mt-3 flex max-h-[18rem] flex-col gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-600 scrollbar-track-sky-100">
           {requisitos.map((requisito) => (
@@ -115,7 +115,7 @@ const MedidorExtra = () => {
             </div>
 
             <motion.div
-              className="mt-6 grid gap-5 xl:grid-cols-2"
+              className="mt-6 grid gap-5 xl:grid-cols-2 items-stretch"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
