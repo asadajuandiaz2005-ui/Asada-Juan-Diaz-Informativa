@@ -114,7 +114,6 @@ export interface AfiliadoMedidor {
   Nombre_Completo?: string;
   Cedula_Juridica?: string;
   Razon_Social?: string;
-  Nombre?: string;
 }
 
 export interface MedidorConsultaResultado {
@@ -127,16 +126,13 @@ export interface MedidorConsultaResultado {
 }
 
 export interface AfiliadoFisicoConsulta {
-  Nombre?: string;
   Nombre_Completo?: string;
   Identificacion?: string;
 }
 
 export interface AfiliadoJuridicoConsulta {
   Razon_Social?: string;
-  Nombre_Completo?: string;
   Cedula_Juridica?: string;
-  Identificacion?: string;
 }
 
 export interface ConsultaFisicaResponse {

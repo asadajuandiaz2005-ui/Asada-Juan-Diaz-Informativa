@@ -75,21 +75,6 @@
       }
     },
     "cambioMedidor": {
-      "Nombre": {
-        "label": "Nombre ",
-        "type": "text",
-        "required": true
-      },
-      "Apellido1": {
-        "label": "Primer Apellido",
-        "type": "text",
-        "required": true
-      },
-      "Apellido2": {
-        "label": "Segundo Apellido",
-        "type": "text",
-        "required": true
-      },
       "Tipo_Identificacion": {
         "label": "Tipo de Identificación",
         "type": "select",
@@ -97,74 +82,12 @@
       },
       "Identificacion": {
         "label": "Número de Identificación",
-        "type": "text",
-        "required": true
-      },
-      "Direccion_Exacta": {
-        "label": "Dirección exacta",
-        "type": "textarea",
-        "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
-        "required": true
-      },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
         "type": "text",
         "required": true
       },
       "Numero_Medidor_Anterior": {
-        "label": "Número de Medidor ",
+        "label": "Número de Medidor",
         "type": "text",
-        "required": true
-      },
-      "Motivo_Solicitud": {
-        "label": "Motivo de solicitud",
-        "type": "textarea",
-        "required": true
-      }
-    },
-    "desconexion": {
-      "Nombre": {
-        "label": "Nombre ",
-        "type": "text",
-        "required": true
-      },
-      "Apellido1": {
-        "label": "Primer Apellido",
-        "type": "text",
-        "required": true
-      },
-      "Apellido2": {
-        "label": "Segundo Apellido",
-        "type": "text",
-        "required": true
-      },
-      "Tipo_Identificacion": {
-        "label": "Tipo de Identificación",
-        "type": "select",
-        "required": true
-      },
-      "Identificacion": {
-        "label": "Número de Identificación",
-        "type": "text",
-        "required": true
-      },
-      "Direccion_Exacta": {
-        "label": "Dirección exacta de residencia",
-        "type": "textarea",
-        "required": true
-      },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
-        "type": "text",
-        "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
         "required": true
       },
       "Motivo_Solicitud": {
@@ -178,27 +101,12 @@
         "required": true
       },
       "Certificacion_Literal": {
-        "label": "Certificacion Literal del terreno",
+        "label": "Certificación Literal del terreno",
         "type": "file",
         "required": true
       }
     },
-    "asociado": {
-      "Nombre": {
-        "label": "Nombre ",
-        "type": "text",
-        "required": true
-      },
-      "Apellido1": {
-        "label": "Primer Apellido",
-        "type": "text",
-        "required": true
-      },
-      "Apellido2": {
-        "label": "Segundo Apellido",
-        "type": "text",
-        "required": true
-      },
+    "desconexion": {
       "Tipo_Identificacion": {
         "label": "Tipo de Identificación",
         "type": "select",
@@ -209,19 +117,36 @@
         "type": "text",
         "required": true
       },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
+      "Numero_Medidor": {
+        "label": "Número de Medidor",
         "type": "text",
         "required": true
       },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
+      "Motivo_Solicitud": {
+        "label": "Motivo de desconexión",
+        "type": "textarea",
+        "required": true
+      }
+    },
+    "asociado": {
+      "Tipo_Identificacion": {
+        "label": "Tipo de Identificación",
+        "type": "select",
         "required": true
       },
       "Motivo_Solicitud": {
         "label": "Motivo de solicitud",
         "type": "textarea",
+        "required": true
+      },
+      "Planos_Terreno": {
+        "label": "Planos del terreno",
+        "type": "file",
+        "required": true
+      },
+      "Certificacion_Literal": {
+        "label": "Escrituras de terreno",
+        "type": "file",
         "required": true
       }
     },
@@ -233,31 +158,6 @@
       },
       "Identificacion": {
         "label": "Número de Identificación",
-        "type": "text",
-        "required": true
-      },
-      "Nombre": {
-        "label": "Nombre",
-        "type": "text",
-        "required": true
-      },
-      "Apellido1": {
-        "label": "Primer Apellido",
-        "type": "text",
-        "required": true
-      },
-      "Apellido2": {
-        "label": "Segundo Apellido",
-        "type": "text",
-        "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
-        "required": true
-      },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
         "type": "text",
         "required": true
       },
@@ -317,28 +217,30 @@
       }
     },
     "desconexion": {
-      "Razon_Social": {
-        "label": "Razón Social",
-        "type": "text",
-        "required": true
-      },
       "Cedula_Juridica": {
         "label": "Cédula Jurídica",
         "type": "text",
         "required": true
       },
-      "Direccion_Exacta": {
-        "label": "Dirección exacta",
+      "Numero_Medidor": {
+        "label": "Número de Medidor",
+        "type": "text",
+        "required": true
+      },
+      "Motivo_Solicitud": {
+        "label": "Motivo de desconexión",
         "type": "textarea",
         "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
+      }
+    },
+    "cambioMedidor": {
+      "Cedula_Juridica": {
+        "label": "Cédula Jurídica",
+        "type": "text",
         "required": true
       },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
+      "Numero_Medidor_Anterior": {
+        "label": "Número de Medidor",
         "type": "text",
         "required": true
       },
@@ -358,88 +260,31 @@
         "required": true
       }
     },
-    "cambioMedidor": {
-      "Razon_Social": {
-        "label": "Razón Social",
-        "type": "text",
-        "required": true
-      },
-      "Cedula_Juridica": {
-        "label": "Cédula Jurídica",
-        "type": "text",
-        "required": true
-      },
-      "Direccion_Exacta": {
-        "label": "Dirección exacta",
-        "type": "textarea",
-        "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
-        "required": true
-      },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
-        "type": "text",
-        "required": true
-      },
-      "Numero_Medidor_Anterior": {
-        "label": "Número de Medidor",
-        "type": "text",
-        "required": true
-      },
-      "Motivo_Solicitud": {
-        "label": "Motivo de solicitud",
-        "type": "textarea",
-        "required": true
-      }
-    },
     "asociado": {
-      "Razon_Social": {
-        "label": "Razón Social",
-        "type": "text",
-        "required": true
-      },
       "Cedula_Juridica": {
         "label": "Cédula Jurídica",
-        "type": "text",
-        "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
-        "required": true
-      },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
         "type": "text",
         "required": true
       },
       "Motivo_Solicitud": {
         "label": "Motivo de solicitud",
         "type": "textarea",
+        "required": true
+      },
+      "Planos_Terreno": {
+        "label": "Planos del terreno",
+        "type": "file",
+        "required": true
+      },
+      "Certificacion_Literal": {
+        "label": "Escrituras de terreno",
+        "type": "file",
         "required": true
       }
     },
     "medidorExtra": {
       "Cedula_Juridica": {
         "label": "Cédula Jurídica",
-        "type": "text",
-        "required": true
-      },
-      "Razon_Social": {
-        "label": "Razón Social",
-        "type": "text",
-        "required": true
-      },
-      "Correo": {
-        "label": "Correo electrónico",
-        "type": "email",
-        "required": true
-      },
-      "Numero_Telefono": {
-        "label": "Número de teléfono",
         "type": "text",
         "required": true
       },
@@ -516,7 +361,7 @@
         "required": true
       },
       "Descripcion": {
-        "label": "Descripción de tu queja",
+        "label": "Descripción de tu reporte",
         "type": "textarea",
         "required": true
       },
@@ -644,7 +489,6 @@
               "texto": "Medidor Extra",
               "ruta": "/MedidorExtra"
             }
-            
           ]
         },
         {

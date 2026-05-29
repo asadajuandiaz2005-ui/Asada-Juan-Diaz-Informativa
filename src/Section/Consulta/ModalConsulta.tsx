@@ -108,7 +108,7 @@ const getTitularDesdeMedidor = (medidor: MedidorConsultaResultado) => {
     // If it has 'Afiliado' directly (like the new por medidor response)
     if (medidor.Afiliado) {
         return {
-            nombre: medidor.Afiliado.Nombre_Completo || medidor.Afiliado.Razon_Social || medidor.Afiliado.Nombre || 'No disponible',
+            nombre: medidor.Afiliado.Nombre_Completo || medidor.Afiliado.Razon_Social || 'No disponible',
             documento: medidor.Afiliado.Identificacion || medidor.Afiliado.Cedula_Juridica || 'No disponible',
             esJuridico: !!medidor.Afiliado.Cedula_Juridica || !!medidor.Afiliado.Razon_Social,
         };
@@ -160,7 +160,7 @@ const hasJuridicoAfiliado = (
 
 const hasFisicoAfiliado = (
     value: unknown
-): value is { Afiliado: { Nombre: string; Identificacion: string } } => {
+): value is { Afiliado: { Nombre_Completo: string; Identificacion: string } } => {
     if (!value || typeof value !== 'object') {
         return false;
     }
@@ -170,7 +170,7 @@ const hasFisicoAfiliado = (
         return false;
     }
 
-    return 'Nombre' in maybe.Afiliado && 'Identificacion' in maybe.Afiliado;
+    return 'Nombre_Completo' in maybe.Afiliado && 'Identificacion' in maybe.Afiliado;
 };
 
 const isSingleMedidor = (value: unknown): value is MedidorConsultaResultado => {
@@ -213,7 +213,7 @@ const getTitularResumen = (
     if (resultado.tipo === 'fisica') {
         if (hasFisicoAfiliado(resultado.data)) {
             return {
-                nombreAfiliado: resultado.data.Afiliado.Nombre,
+                nombreAfiliado: resultado.data.Afiliado.Nombre_Completo,
                 documentoAfiliado: resultado.data.Afiliado.Identificacion,
                 esTitularJuridico: false,
             };
@@ -273,17 +273,16 @@ const renderMedidor = (medidor: MedidorConsultaResultado, index: number) => {
     let cedulaAfiliado: string | undefined;
     let tipoAfiliado = 'Nombre';
 
-        if (esJuridico && afiliadoMedidor) {
-            const afiliadoJur = afiliadoMedidor as any;
-            nombreAfiliadorMedidor = afiliadoJur.Nombre_Completo || afiliadoJur.Razon_Social;
-            cedulaAfiliado = afiliadoJur.Cedula_Juridica || afiliadoJur.Identificacion;
+    if (esJuridico && afiliadoMedidor) {
+        const afiliadoJur = afiliadoMedidor as any;
+        nombreAfiliadorMedidor = afiliadoJur.Razon_Social || 'No disponible';
+        cedulaAfiliado = afiliadoJur.Identificacion || afiliadoJur.Cedula_Juridica;
         tipoAfiliado = 'Razón Social';
     } else if (afiliadoMedidor) {
         const afiliadoFisico = afiliadoMedidor as any;
-        nombreAfiliadorMedidor = afiliadoFisico.Nombre_Completo || afiliadoFisico.Nombre ? `${afiliadoFisico.Nombre} ${afiliadoFisico.Primer_Apellido || ''}` : 'No disponible';
-        if (nombreAfiliadorMedidor === ' No disponible' && afiliadoFisico.Nombre_Completo) {
-            nombreAfiliadorMedidor = afiliadoFisico.Nombre_Completo;
-        }
+        nombreAfiliadorMedidor = afiliadoFisico.Nombre_Completo
+            || (afiliadoFisico.Nombre ? `${afiliadoFisico.Nombre} ${afiliadoFisico.Primer_Apellido || ''}`.trim() : '')
+            || 'No disponible';
         cedulaAfiliado = afiliadoFisico.Identificacion;
     }
 

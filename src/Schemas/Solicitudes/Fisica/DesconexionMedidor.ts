@@ -9,13 +9,14 @@ export const TipoIdentificacionValues = [
 export type TipoIdentificacion = typeof TipoIdentificacionValues[number];
 
 export const MotivoDesconexionValues = [
-  'Morosidad',
-  'Infracción al reglamento de prestación del servicio',
-  'Conexión ilegal a terceros',
-  'Solicitud expresa de retiro del servicio por parte del usuario (traslado fuera de Juan Díaz)',
+  'Cambio de domicilio',
+  'Ya no requiere el servicio',
+  'Cambio de propietario',
+  'Casa desocupada',
+  'Otro',
 ] as const;
 
-export type MotivoDesconexion = typeof MotivoDesconexionValues[number];
+export type MotivoDesconexion = string;
 
 export const DesconexionMedidorSchema = z.object({
   Tipo_Identificacion: z.enum(TipoIdentificacionValues, {
@@ -26,9 +27,9 @@ export const DesconexionMedidorSchema = z.object({
     .trim()
     .min(1, 'La identificación no puede estar vacía'),
 
-  Motivo_Desconexion: z.enum(MotivoDesconexionValues, {
-    errorMap: () => ({ message: 'Debe seleccionar una causa de desconexión válida' }),
-  }),
+  Motivo_Desconexion: z.string()
+    .trim()
+    .min(1, 'Debe ingresar una causa de desconexión válida'),
 
   Id_Medidor: z.number()
     .min(1, 'El Id del medidor no puede estar vacío')
